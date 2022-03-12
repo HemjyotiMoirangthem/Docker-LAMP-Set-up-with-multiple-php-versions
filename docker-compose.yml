@@ -1,0 +1,77 @@
+version: "3.7"
+services:
+  apache:
+    build:
+      dockerfile: php.Dockerfile
+      context: ./apache
+    restart: always
+    volumes:
+      - ./data/html:/var/www/html
+      - ./data/logs/apache/:/usr/local/apache2/logs/
+           
+    ports:
+      - "${APACHE_PORT}:80"
+      
+    networks:
+      - internal
+
+  php56:
+    build:
+      dockerfile: phpfpm-5.6.Dockerfile
+      context: ./php5.6
+    volumes:
+      - ./data/html:/var/www/html
+      - ./data/logs/php5.6:/var/log
+    networks:
+      - internal
+
+  php74:
+    build:
+      dockerfile: phpfpm-7.4.Dockerfile
+      context: ./php7.4
+    volumes:
+      - ./data/html:/var/www/html
+      - ./data/logs/php7.4:/var/log
+    networks:
+      - internal
+
+  mysql-server:
+    build:
+      dockerfile: mysql.Dockerfile
+      context: ./mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - ./data/mysql:/var/lib/mysql
+      - ./data/shared:/var/shared
+      - ./data/logs/mysql:/var/log/mysql
+    
+    networks:
+      - internal
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    restart: always
+    environment:
+      PMA_HOST: ${PMA_HOST}
+      PMA_USER: ${PMA_USER}
+      PMA_PASSWORD: ${PMA_PASSWORD}
+    ports:
+      - "${PHPMYADMIN_PORT}:80"
+    networks:
+      - internal
+
+  memcached:
+    image: memcached
+    networks:
+      - internal
+
+  redis:
+    image: redis
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge
